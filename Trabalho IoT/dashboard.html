@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard IoT - Monitoramento da Máquina</title>
+
+<style>
+    body {
+        background: #121212;
+        color: #EEE;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding-top: 40px;
+    }
+
+    h1 {
+        color: #00eaff;
+        font-size: 32px;
+    }
+
+    #card {
+        margin: auto;
+        margin-top: 40px;
+        padding: 30px;
+        width: 330px;
+        background: #1e1e1e;
+        border-radius: 16px;
+        box-shadow: 0 0 20px #00eaff77;
+    }
+
+    #valor {
+        font-size: 48px;
+        color: #00ffa6;
+        margin-top: 10px;
+    }
+
+</style>
+
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+
+<body>
+
+<h1>Monitoramento de Temperatura da Máquina (IoT)</h1>
+
+<div id="card">
+    <h2>Temperatura Atual</h2>
+    <div id="valor">Aguardando...</div>
+</div>
+
+<script>
+    const client = mqtt.connect("wss://broker.hivemq.com:8884/mqtt");
+
+    client.on("connect", () => {
+        console.log("Dashboard conectada ao MQTT!");
+        client.subscribe("iot/maquina/temperatura");
+    });
+
+    client.on("message", (topic, message) => {
+        document.getElementById("valor").innerHTML =
+            message.toString() + " °C";
+    });
+</script>
+
+</body>
+</html>
