@@ -1,25 +1,30 @@
 import time
-import psutil
 import paho.mqtt.client as mqtt
+import wmi
 
-# conectar ao broker
-client = mqtt.Client()
+# Conecta à API de sensores do OpenHardwareMonitor
+w = wmi.WMI(namespace="root\OpenHardwareMonitor")
+
+def ler_temperatura_cpu():
+    sensores = w.Sensor()
+    for s in sensores:
+        if s.SensorType == 'Temperature' and "CPU" in s.Name:
+            return s.Value
+    return None
+
+
+# Conexão MQTT
+client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 client.connect("broker.hivemq.com", 1883, 60)
+client.loop_start()
 
 while True:
-    temp = psutil.sensors_temperatures()
+    temp = ler_temperatura_cpu()
 
-    # pega qualquer sensor disponível
-    cpu_temp = None
-    for sensor in temp.values():
-        for entry in sensor:
-            cpu_temp = entry.current
-            break
-        if cpu_temp:
-            break
-
-    if cpu_temp:
-        print("Enviando:", cpu_temp, "°C")
-        client.publish("iot/maquina/temperatura", str(cpu_temp))
+    if temp is not None:
+        print(f"Temperatura REAL da CPU: {temp} °C")
+        client.publish("iot/maquina/temperatura", str(temp))
+    else:
+        print("Nenhum sensor encontrado! Abra o OpenHardwareMonitor!")
 
     time.sleep(2)
